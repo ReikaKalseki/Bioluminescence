@@ -2,7 +2,12 @@ require "config"
 
 CHUNK_SIZE = 32
 
-PLANT_SPAWN_RATE = 5
+PLANT_SPAWN_RATE = {
+	["bush"] = {chunkChance = 0.2, perChunk = 1, clusterChance = 0.2, clusterSize = {4, 9}, clusterRadius = {3, 6}},
+	["tree"] = {chunkChance = 0.75, perChunk = 2, clusterChance = 0.3, clusterSize = {3, 6}, clusterRadius = {5, 10}},
+	["reed"] = {chunkChance = 0.15, perChunk = 1, clusterChance = 0.15, clusterSize = {2, 4}, clusterRadius = {2, 4}},
+	["lily"] = {chunkChance = 0.08, perChunk = 1, clusterChance = 0.1, clusterSize = {2, 2}, clusterRadius = {2, 2}},
+}
 
 RENDER_COLORS = {}
 
@@ -15,13 +20,6 @@ local COLORS_LOOKUP = {}
 local COLORS_PRIMARY = {}
 
 local COLORS_SECONDARY = {}
-
-PLANT_CHOICE_CHANCES = {
-	["bush"] = 60,
-	["tree"] = 85,
-	["reed"] = 94,
-	["lily"] = 100,
-}
 
 local function calculateColor(tile)
 	local colors = {}

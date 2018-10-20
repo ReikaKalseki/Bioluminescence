@@ -6,26 +6,35 @@ local function controlChunk(surface, area)
 	if not Config.glowPlants then return end
 	
 	local rand = game.create_random_generator()
-	local x = (area.left_top.x+area.right_bottom.x)/2
-	local y = (area.left_top.y+area.right_bottom.y)/2
-	local seed = createSeed(surface, x, y)
+	local seed = createSeed(surface, area.left_top.x, area.left_top.y)
 	rand.re_seed(seed)
-	local f1 = rand(0, 2147483647)/2147483647
-	--game.print("Chunk at " .. x .. ", " .. y .. " with chance " .. f .. " / " .. f1)
-	--if f1 < f then
-		--game.print("Genning Chunk at " .. x .. ", " .. y)
-		x = x-16+rand(0, 32)
-		y = y-16+rand(0, 32)
-		local count = rand(1, PLANT_SPAWN_RATE)
-		count = math.max(1, math.ceil(count*Config.density))
-		--game.print("Chunk at " .. x .. ", " .. y .. " attempting " .. count)
-		for i = 1, count do
-			local r = CHUNK_SIZE/2
-			local dx = x-r+rand(0, r*2)
-			local dy = y-r+rand(0, r*2)
-			placeIfCan(surface, dx, dy, rand)
+	for class,rate in pairs(PLANT_SPAWN_RATE) do
+		local f1 = rand(0, 2147483647)/2147483647
+		--game.print("Chunk at " .. serpent.block(area) .. " with chance " .. f .. " / " .. f1)
+		if f1 <= rate.chunkChance then
+			local f2 = rand(0, 2147483647)/2147483647
+			--game.print("Genning Chunk with " .. class .. " at " .. serpent.block(area))
+			local count = rand(1, rate.perChunk)
+			count = math.max(1, math.ceil(count*Config.density))
+			--game.print("Chunk at " .. serpent.block(area) .. " attempting " .. count)
+			for i = 1, count do
+				local dx = rand(area.left_top.x, area.right_bottom.x)
+				local dy = rand(area.left_top.y, area.right_bottom.y)
+				if f2 <= rate.clusterChance then
+					local f3 = rand(0, 2147483647)/2147483647
+					local s = math.floor(rate.clusterSize[1]+f3*(rate.clusterSize[2]-rate.clusterSize[1])+0.5)
+					local r = math.floor(rate.clusterRadius[1]+f3*(rate.clusterRadius[2]-rate.clusterRadius[1])+0.5)
+					for k = 1, s do
+						local ddx = rand(dx-r, dx+r)
+						local ddy = rand(dy-r, dy+r)
+						placeIfCan(surface, ddx, ddy, rand, class)
+					end
+				else
+					placeIfCan(surface, dx, dy, rand, class)
+				end
+			end
 		end
-	--end
+	end
 end
 
 script.on_event(defines.events.on_chunk_generated, function(event)

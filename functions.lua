@@ -55,9 +55,9 @@ end
 local function tryPlaceBush(surface, x, y, color, rand)
 	local ename = "glowing-bush-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
-		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
+		local entity = surface.create_entity{name = ename, position = {x+0.125, y}, force = game.forces.neutral}
 		if entity then
-			surface.create_entity{name = "glowing-plant-light-" .. color, position = {x-0.125, y}, force = game.forces.neutral}
+			surface.create_entity{name = "glowing-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
@@ -79,7 +79,7 @@ end
 local function tryPlaceReed(surface, x, y, color, rand)
 	local ename = "glowing-reed-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} then
-		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
+		local entity = surface.create_entity{name = ename, position = {x-0.35, y}, force = game.forces.neutral}
 		if entity then
 			surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
@@ -90,7 +90,7 @@ end
 
 local function tryPlaceTree(surface, x, y, color, rand)
 	local ename = "glowing-tree-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
-	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
+	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) and #surface.find_entities_filtered({type = "tree", area = {{x-4, y-4}, {x+4, y+4}}}) > 1 then
 		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
 		if entity then
 			for d = 0.5,2.5,1 do
@@ -105,19 +105,17 @@ local function tryPlaceTree(surface, x, y, color, rand)
 	end
 end
 
-function placeIfCan(surface, x, y, rand)
+function placeIfCan(surface, x, y, rand, class)
 	local tile = surface.get_tile(x, y)
-	local color,water = getRandomColorForTile(tile, rand)
+	local color,water = getRandomColorForTile(tile, rand) --need some way to prevent rainbow water
 	if color then
-		local class = nil
-		local f = rand(1, 100)
-		if f < PLANT_CHOICE_CHANCES["bush"] and (not water) then
+		if class == "bush" and (not water) then
 			return tryPlaceBush(surface, x, y, color, rand)
-		elseif f < PLANT_CHOICE_CHANCES["tree"] and (not water) then
+		elseif class == "tree" and (not water) then
 			return tryPlaceTree(surface, x, y, color, rand)
-		elseif f < PLANT_CHOICE_CHANCES["reed"] then
+		elseif class == "reed" then
 			return tryPlaceReed(surface, x, y, color, rand)
-		elseif f < PLANT_CHOICE_CHANCES["lily"] and water then
+		elseif class == "lily" and water then
 			return tryPlaceLily(surface, x, y, color, rand)
 		end
 	end
@@ -166,7 +164,7 @@ local function generateColorVariations(colors)
 	return colors
 end
 
-local function createLight(name, br, size, collision, clr)
+local function createLight(name, br, size, clr, collision)
 	return {
 		type = "rail-chain-signal",
 		name = name,
@@ -214,18 +212,21 @@ function createGlowingPlants(color, nvars)
 		local b = 1--2
 		local s = 5--6
 		
+		local r = 0.7
+		
 		local bname = "glowing-bush-" .. color .. "-" .. i
 		
 		local bush = {
           type = "simple-entity",
           name = bname,
-          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map"},
+          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
+          selectable_in_game = true,
+		  minable = nil,
           icon = "__Bioluminescence__/graphics/icons/bush.png",
 		  icon_size = 32,
           subgroup = "glowing-bush",
           order = bname,
-          --selection_box = {{-w, -h}, {w, h}},
-          selectable_in_game = false,
+          selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {"water-tile"},
           render_layer = "decorative",
 		  localised_name = {"glowing-plants.glowing-bush", {"glowing-color-name." .. color}},
@@ -236,18 +237,21 @@ function createGlowingPlants(color, nvars)
               width = 180,
               height = 128,
 			  scale = 0.75,
+			  shift = {0.5, 0}
             },
             {
               filename = "__Bioluminescence__/graphics/entity/bush/v2/" .. color .. "-02.png",
               width = 96,
               height = 64,
 			  scale = 1,
+			  shift = {0.4, 0}
             },
             {
               filename = "__Bioluminescence__/graphics/entity/bush/v2/" .. color .. "-03.png",
               width = 96,
               height = 64,
 			  scale = 1,
+			  shift = {0.2, 0.2}
             }
           }
 		}
@@ -257,40 +261,51 @@ function createGlowingPlants(color, nvars)
 		local lily = {
           type = "simple-entity",
           name = lname,
-          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map"},
+          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
+          selectable_in_game = true,
+		  minable = nil,
           icon = "__Bioluminescence__/graphics/icons/lily.png",
 		  icon_size = 32,
           subgroup = "glowing-lily",
-          order = bname,
-          --selection_box = {{-w, -h}, {w, h}},
-          selectable_in_game = false,
+          order = lname,
+          selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {},
           render_layer = "decorative",
 		  localised_name = {"glowing-plants.glowing-lily", {"glowing-color-name." .. color}},
           pictures =
           {
             {
-              filename = "__Bioluminescence__/graphics/entity/lily-" .. color .. ".png",
-              width = 180,
-              height = 128,
+              filename = "__Bioluminescence__/graphics/entity/lily/lily-01.png",
+              width = 64,
+              height = 64,
 			  scale = 1,
-			  tint = light
+			  tint = light,
+			  shift = {0.08, -0.2}
+            },
+            {
+              filename = "__Bioluminescence__/graphics/entity/lily/lily-02.png",
+              width = 64,
+              height = 64,
+			  scale = 1,
+			  tint = light,
+			  shift = {0.08, -0.2}
             }
           }
 		}
 		
-		local lname = "glowing-reed-" .. color .. "-" .. i
+		local rname = "glowing-reed-" .. color .. "-" .. i
 		
 		local reed = {
           type = "simple-entity",
           name = rname,
-          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map"},
-          icon = "__Bioluminescence__/graphics/icons/reed.png",
+          flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
+          selectable_in_game = true,
+		  minable = nil,
+          icon = "__Bioluminescence__/graphics/icons/reeds.png",
 		  icon_size = 32,
           subgroup = "glowing-reed",
-          order = bname,
-          --selection_box = {{-w, -h}, {w, h}},
-          selectable_in_game = false,
+          order = rname,
+          selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {},
           render_layer = "decorative",
 		  localised_name = {"glowing-plants.glowing-reed", {"glowing-color-name." .. color}},
@@ -301,6 +316,7 @@ function createGlowingPlants(color, nvars)
               width = 128,
               height = 96,
 			  scale = 1,
+			  shift = {0.35, -0.1}
             }
           }
 		}
@@ -311,7 +327,7 @@ function createGlowingPlants(color, nvars)
 			tree,
 			bush,
 			lily,
-			reeds,
+			reed,
 			createLight("glowing-plant-light-" .. color, b, s, light, {"water-tile"}),
 			createLight("glowing-water-plant-light-" .. color, b, s, light, {}),
 		})
