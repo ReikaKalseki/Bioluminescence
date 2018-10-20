@@ -38,7 +38,7 @@ local function controlChunk(surface, area)
 end
 
 script.on_event(defines.events.on_chunk_generated, function(event)
-	--controlChunk(event.surface, event.area)
+	controlChunk(event.surface, event.area)
 end)
 
 script.on_event(defines.events.on_tick, function(event)	
