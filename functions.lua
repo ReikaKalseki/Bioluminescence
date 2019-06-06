@@ -57,7 +57,8 @@ local function tryPlaceBush(surface, x, y, color, rand)
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
 		local entity = surface.create_entity{name = ename, position = {x+0.125, y}, force = game.forces.neutral}
 		if entity then
-			surface.create_entity{name = "glowing-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			--surface.create_entity{name = "glowing-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
@@ -69,7 +70,8 @@ local function tryPlaceLily(surface, x, y, color, rand)
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} then
 		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
 		if entity then
-			surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			--surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
@@ -81,7 +83,8 @@ local function tryPlaceReed(surface, x, y, color, rand)
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} then
 		local entity = surface.create_entity{name = ename, position = {x-0.35, y}, force = game.forces.neutral}
 		if entity then
-			surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			--surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
+			rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
@@ -96,7 +99,8 @@ local function tryPlaceTree(surface, x, y, color, rand)
 			for d = 0.5,2.5,1 do
 				local rx = (rand(0, 10)-5)/10
 				local ry = (rand(0, 10)-5)/10
-				surface.create_entity{name = "glowing-plant-light-" .. color, position = {x+rx, y-d+ry}, force = game.forces.neutral}
+				--surface.create_entity{name = "glowing-plant-light-" .. color, position = {x+rx, y-d+ry}, force = game.forces.neutral}
+				rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx, ry-d}, surface=surface}				
 			end
 			entity.tree_color_index = math.random(1, 9)
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
@@ -164,9 +168,10 @@ local function generateColorVariations(colors)
 	return colors
 end
 
+--[[
 local function createLight(name, br, size, clr, collision)
 	return {
-		type = "rail-chain-signal",
+		type = "simple-entity",
 		name = name,
 		icon_size = 32,
 		flags = {"placeable-off-grid", "not-on-map"},
@@ -176,6 +181,7 @@ local function createLight(name, br, size, clr, collision)
 		--selectable_in_game = false,
 		collision_mask = collision,
 		animation = createEmptyAnimation(),
+		picture = createEmptyAnimation(),
 		selection_box_offsets =
 		{
 		  {0, 0},
@@ -194,7 +200,7 @@ local function createLight(name, br, size, clr, collision)
 		blue_light = {intensity = br, size = size, color=clr},
 	}
 end
-
+--]]
 function createGlowingPlants(color, nvars)
 	for i = 1,PLANT_VARIATIONS[color] do
 		local ename = "glowing-tree-" .. color .. "-" .. i
@@ -328,8 +334,8 @@ function createGlowingPlants(color, nvars)
 			bush,
 			lily,
 			reed,
-			createLight("glowing-plant-light-" .. color, b, s, light, {"water-tile"}),
-			createLight("glowing-water-plant-light-" .. color, b, s, light, {}),
+			--createLight("glowing-plant-light-" .. color, b, s, light, {"water-tile"}),
+			--createLight("glowing-water-plant-light-" .. color, b, s, light, {}),
 		})
 	end
 end

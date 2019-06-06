@@ -5,7 +5,7 @@
   "author": "Reika",
   "contact": "",
   "homepage": "",
-  "factorio_version" : "0.16",
+  "factorio_version" : "0.17",
   "description": "Adds bioluminescence to the natural world of Nauvis.",
-  "dependencies": ["base >= 0.16.0", "? Rampant", "? NaturalEvolution", "? AlienBiomes"]
+  "dependencies": ["base", "DragonIndustries", "? Rampant", "? NaturalEvolution", "? AlienBiomes"]
 }

@@ -9,6 +9,13 @@ PLANT_SPAWN_RATE = {
 	["lily"] = {chunkChance = 0.08, perChunk = 1, clusterChance = 0.1, clusterSize = {2, 2}, clusterRadius = {2, 2}},
 }
 
+BITER_GLOW_PARAMS = {
+	["small"] = {color = {r=0.9 , g=0.7, b=0.3, a=1}, size = 0.4},
+	["medium"] = {color = {r=0.93, g=0.4, b=0.4, a=1}, size = 0.7},
+	["big"] = {color = {r=0.3, g=0.62, b=0.75, a=1}, size = 1},
+	["behemoth"] = {color = {r = 0.4, g = 0.95, b = 0.2, a = 1.000}, size = 1.6}
+}
+
 RENDER_COLORS = {}
 
 local ALL_COLORS = {}

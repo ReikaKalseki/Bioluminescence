@@ -2,6 +2,8 @@ require "config"
 require "constants"
 require "functions"
 
+require "__DragonIndustries__.strings"
+
 local function controlChunk(surface, area)
 	if not Config.glowPlants then return end
 	
@@ -76,3 +78,42 @@ script.on_event(defines.events.on_tick, function(event)
 	--local pos=game.players[1].position
 	--for k,v in pairs(game.surfaces.nauvis.find_entities_filtered{area={{pos.x-1,pos.y-1},{pos.x+1,pos.y+1}}, type="resource"}) do v.destroy() end
 end)
+
+local function onEntityRemoved(event)	
+	local entity = event.entity
+	--[[
+	if string.find(entity.name, "glowing-tree", 1, true) then
+		--game.print(entity.name)
+		local pos = entity.position
+		local lights = entity.surface.find_entities_filtered{type = "rail-chain-signal", area = {{pos.x-1, pos.y-3.5}, {pos.x+1, pos.y+0.5}}}
+		for _,light in pairs(lights) do
+			if string.find(light.name, "glowing-plant", 1, true) then
+				light.destroy()
+			end
+		end
+	end
+	--]]
+end
+
+local function onEntitySpawned(event)	
+	local entity = event.entity
+	
+	if entity.type == "unit" and Config.glowBiters then
+		if string.find(entity.name, "biter", 1, true) or string.find(entity.name, "spitter", 1, true) then
+			local key = literalReplace(entity.name, "-biter", "")
+			key = literalReplace(key, "-spitter", "")
+			--game.print(key)
+			local params = BITER_GLOW_PARAMS[key]
+			if params then
+				rendering.draw_light{sprite="utility/light_medium", scale=params.size, intensity=1, color=params.color, target=entity, surface=entity.surface}
+			end
+		end
+	end
+end
+
+script.on_event(defines.events.on_entity_died, onEntityRemoved)
+script.on_event(defines.events.script_raised_destroy, onEntityRemoved)
+script.on_event(defines.events.on_player_mined_entity, onEntityRemoved)
+script.on_event(defines.events.on_robot_mined_entity, onEntityRemoved)
+
+script.on_event(defines.events.on_entity_spawned, onEntitySpawned)
