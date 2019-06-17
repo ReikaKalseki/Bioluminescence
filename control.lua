@@ -1,8 +1,10 @@
 require "config"
 require "constants"
 require "functions"
+require "prototypes.colorkeys"
 
 require "__DragonIndustries__.strings"
+require "__DragonIndustries__.mathhelper"
 
 local function controlChunk(surface, area)
 	if not Config.glowPlants then return end
@@ -99,6 +101,7 @@ local function onEntitySpawned(event)
 	local entity = event.entity
 	
 	if entity.type == "unit" and Config.glowBiters then
+		--[[
 		if string.find(entity.name, "biter", 1, true) or string.find(entity.name, "spitter", 1, true) then
 			local key = literalReplace(entity.name, "-biter", "")
 			key = literalReplace(key, "-spitter", "")
@@ -107,6 +110,13 @@ local function onEntitySpawned(event)
 			if params then
 				rendering.draw_light{sprite="utility/light_medium", scale=params.size, intensity=1, color=params.color, target=entity, surface=entity.surface}
 			end
+		end
+		--]]
+		local clr = getColor(entity.name)
+		if clr then
+			local box = entity.prototype.collision_box
+			local size = box and getBoundingBoxAverageEdgeLength(box)*1.2 or 0.5
+			rendering.draw_light{sprite="utility/light_medium", scale=size, intensity=1, color=clr, target=entity, surface=entity.surface}
 		end
 	end
 end

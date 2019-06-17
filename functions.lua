@@ -1,19 +1,8 @@
 require "constants"
 require "config"
 
-function cantorCombine(a, b)
-	--a = (a+1024)%16384
-	--b = b%16384
-	local k1 = a*2
-	local k2 = b*2
-	if a < 0 then
-		k1 = a*-2-1
-	end
-	if b < 0 then
-		k2 = b*-2-1
-	end
-	return 0.5*(k1 + k2)*(k1 + k2 + 1) + k2
-end
+require "__DragonIndustries__.mathhelper"
+require "__DragonIndustries__.world"
 
 function createSeed(surface, x, y) --Used by Minecraft MapGen
 	local seed = surface.map_gen_settings.seed
@@ -27,29 +16,6 @@ function getRandomColorForTile(tile, rand)
 	local colors,water = getColorsForTile(tile)
 	if colors == nil or #colors == 0 then return nil end
 	return colors[rand(1, #colors)], water
-end
-
-function isWaterEdge(surface, x, y)
-	if surface.get_tile{x-1, y}.valid and surface.get_tile{x-1, y}.prototype.layer == "water-tile" then
-		return true
-	end
-	if surface.get_tile{x+1, y}.valid and surface.get_tile{x+1, y}.prototype.layer == "water-tile" then
-		return true
-	end
-	if surface.get_tile{x, y-1}.valid and surface.get_tile{x, y-1}.prototype.layer == "water-tile" then
-		return true
-	end
-	if surface.get_tile{x, y+1}.valid and surface.get_tile{x, y+1}.prototype.layer == "water-tile" then
-		return true
-	end
-end
-
-function isInChunk(x, y, chunk)
-	local minx = math.min(chunk.left_top.x, chunk.right_bottom.x)
-	local miny = math.min(chunk.left_top.y, chunk.right_bottom.y)
-	local maxx = math.max(chunk.left_top.x, chunk.right_bottom.x)
-	local maxy = math.max(chunk.left_top.y, chunk.right_bottom.y)
-	return x >= minx and x <= maxx and y >= miny and y <= maxy
 end
 
 local function tryPlaceBush(surface, x, y, color, rand)
