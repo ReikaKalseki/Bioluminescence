@@ -24,7 +24,7 @@ local function createItem(data)
 	{
 		type = "item",
 		name = getRefname(data.name),
-		icon = "__core__/graphics/empty.png",
+		icon = "__core__/graphics/slot-icon-fuel.png",
 		icon_size = 1,
 		stack_size = 1,
 		order = parseColor(data),
