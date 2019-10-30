@@ -199,7 +199,7 @@ function createGlowingPlants(color, nvars)
           subgroup = "glowing-bush",
           order = bname,
           selection_box = {{-r, -r}, {r, r}},
-		  collision_mask = {"water-tile"},
+		  collision_mask = {"colliding-with-tiles-only", "water-tile"},
           render_layer = "decorative",
 		  localised_name = {"glowing-plants.glowing-bush", {"glowing-color-name." .. color}},
           pictures =

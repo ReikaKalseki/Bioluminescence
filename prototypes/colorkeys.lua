@@ -2,7 +2,7 @@ require "__DragonIndustries__.strings"
 
 local function parseColor(data)
 	local clr = data.run_animation.layers[3].tint
-	local ret = clr.r .. "-" .. clr.g .. "-" .. clr.b
+	local ret = clr and (clr.r .. "-" .. clr.g .. "-" .. clr.b) or "1-1-1" --white if no color value
 	return ret
 end
 
