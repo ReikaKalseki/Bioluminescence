@@ -2,7 +2,9 @@ require "constants"
 require "config"
 
 require "__DragonIndustries__.mathhelper"
+require "__DragonIndustries__.items"
 require "__DragonIndustries__.world"
+require "__DragonIndustries__.strings"
 require "__DragonIndustries__.color"
 
 function createSeed(surface, x, y) --Used by Minecraft MapGen
@@ -58,19 +60,28 @@ local function tryPlaceReed(surface, x, y, color, rand)
 	end
 end
 
+function createTreeLights(color, rand, entity)
+	for d = 0.5,2.5,1 do
+		local rx = (rand(0, 10)-5)/10
+		local ry = (rand(0, 10)-5)/10
+		rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx, ry-d}, surface=entity.surface}				
+	end
+	entity.tree_color_index = math.random(1, 9)
+	--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
+end
+
+function createTreeLightSimple(entity)
+	local color = splitString(entity.name, "%-")[3]
+	--game.print(entity.name .. " > " .. color)
+	createTreeLights(color, game.create_random_generator(), entity)
+end
+
 local function tryPlaceTree(surface, x, y, color, rand)
 	local ename = "glowing-tree-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) and #surface.find_entities_filtered({type = "tree", area = {{x-4, y-4}, {x+4, y+4}}}) > 1 then
 		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
 		if entity then
-			for d = 0.5,2.5,1 do
-				local rx = (rand(0, 10)-5)/10
-				local ry = (rand(0, 10)-5)/10
-				--surface.create_entity{name = "glowing-plant-light-" .. color, position = {x+rx, y-d+ry}, force = game.forces.neutral}
-				rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx, ry-d}, surface=surface}				
-			end
-			entity.tree_color_index = math.random(1, 9)
-			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
+			createTreeLights(color, rand, entity)
 			return true
 		end
 	end
@@ -159,6 +170,18 @@ function createGlowingPlants(color, nvars)
 		local light = convertColor(render, true)
 		tree.localised_name = {"glowing-plants.glowing-tree", {"glowing-color-name." .. color}}
         tree.subgroup = "glowing-tree"
+		addMineableDropToEntity(tree, {type = "item", name = "glowing-sapling-" .. ename, amount = 1})
+		local treeitem = {
+			type = "item",
+			name = "glowing-sapling-" .. ename,
+			icon = tree.icon,
+			icon_size = tree.icon_size,
+			icon_mipmaps = tree.icon_mipmaps,
+			subgroup = tree.subgroup,
+			order = "a[" .. ename .. "]",
+			place_result = ename,
+			stack_size = 50
+		}
 		
 		math.randomseed(render)
 		tree.colors = generateColorVariations(tree.colors)
@@ -278,6 +301,7 @@ function createGlowingPlants(color, nvars)
 		
 		data:extend({
 			tree,
+			treeitem,
 			bush,
 			lily,
 			reed,

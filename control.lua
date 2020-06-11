@@ -97,6 +97,13 @@ local function onEntityRemoved(event)
 	--]]
 end
 
+local function onEntityAdded(event)	
+	local entity = event.created_entity
+	if string.find(entity.name, "glowing-tree", 1, true) then
+		createTreeLightSimple(entity)
+	end
+end
+
 local function onEntitySpawned(event)	
 	local entity = event.entity
 	
@@ -125,5 +132,8 @@ script.on_event(defines.events.on_entity_died, onEntityRemoved)
 script.on_event(defines.events.script_raised_destroy, onEntityRemoved)
 script.on_event(defines.events.on_player_mined_entity, onEntityRemoved)
 script.on_event(defines.events.on_robot_mined_entity, onEntityRemoved)
+
+script.on_event(defines.events.on_built_entity, onEntityAdded)
+script.on_event(defines.events.on_robot_built_entity, onEntityAdded)
 
 script.on_event(defines.events.on_entity_spawned, onEntitySpawned)
