@@ -21,17 +21,25 @@ function getRandomColorForTile(tile, rand)
 	return colors[rand(1, #colors)], water
 end
 
+local function createBushLight(surface, entity, color)
+	rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+end
+
 local function tryPlaceBush(surface, x, y, color, rand)
 	local ename = "glowing-bush-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
 	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
 		local entity = surface.create_entity{name = ename, position = {x+0.125, y}, force = game.forces.neutral}
 		if entity then
 			--surface.create_entity{name = "glowing-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
-			rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+			createBushLight(surface, entity, color)
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
 	end
+end
+
+local function createLilyLight(surface, entity, color)
+	rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 end
 
 local function tryPlaceLily(surface, x, y, color, rand)
@@ -40,11 +48,15 @@ local function tryPlaceLily(surface, x, y, color, rand)
 		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
 		if entity then
 			--surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
-			rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+			createLilyLight(surface, entity, color)
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
 	end
+end
+
+local function createReedLight(surface, entity, color)
+	rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 end
 
 local function tryPlaceReed(surface, x, y, color, rand)
@@ -53,18 +65,20 @@ local function tryPlaceReed(surface, x, y, color, rand)
 		local entity = surface.create_entity{name = ename, position = {x-0.35, y}, force = game.forces.neutral}
 		if entity then
 			--surface.create_entity{name = "glowing-water-plant-light-" .. color, position = {x, y}, force = game.forces.neutral}
-			rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+			createReedLight(surface, entity, color)
 			--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
 			return true
 		end
 	end
 end
 
-function createTreeLights(color, rand, entity)
+function createTreeLights(color, rand, entity, offset)
+	local ox = offset and offset.x or 0
+	local oy = offset and offset.y or 0
 	for d = 0.5,2.5,1 do
 		local rx = (rand(0, 10)-5)/10
 		local ry = (rand(0, 10)-5)/10
-		rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx, ry-d}, surface=entity.surface}				
+		rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
 	end
 	entity.tree_color_index = math.random(1, 9)
 	--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
@@ -73,7 +87,7 @@ end
 function createTreeLightSimple(entity)
 	local color = splitString(entity.name, "%-")[3]
 	--game.print(entity.name .. " > " .. color)
-	createTreeLights(color, game.create_random_generator(), entity)
+	createTreeLights(color, game.create_random_generator(), entity, {x = -0.5, y = 0})
 end
 
 local function tryPlaceTree(surface, x, y, color, rand)
@@ -102,6 +116,69 @@ function placeIfCan(surface, x, y, rand, class)
 		end
 	end
 	return false
+end
+
+function createBiterLight(entity)
+	local clr = getColor(entity.name)
+	if clr then
+		local box = entity.prototype.collision_box
+		local size = box and getBoundingBoxAverageEdgeLength(box)*1.2 or 0.5
+		rendering.draw_light{sprite="utility/light_medium", scale=size, intensity=1, color=clr, target=entity, surface=entity.surface}
+		return true
+	end
+end
+
+local function recreateEntityLight(e)
+	if e.type == "tree" then
+		createTreeLightSimple(e)
+	else
+		local color = splitString(e.name, "%-")[3]
+		--game.print(e.name .. " > " .. color)
+		if string.find(e.name, "bush") then
+			createBushLight(e.surface, e, color)
+		elseif string.find(e.name, "reed") then
+			createReedLight(e.surface, e, color)
+		elseif string.find(e.name, "lily") then
+			createLilyLight(e.surface, e, color)
+		end
+	end
+end
+
+local function reloadLights(surface)
+	local num = 0
+	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"tree", "simple-entity"}}) do
+		if string.find(e.name, "glowing", 1, true) then
+			recreateEntityLight(e)
+			num = num+1
+		end
+	end
+	if Config.glowBiters then
+		for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"unit"}}) do
+			if createBiterLight(e) then
+				num = num+1
+			end
+		end
+	end
+	return num
+end
+
+function reloadAllLights()
+	rendering.clear("Bioluminescence")
+	local num = 0
+	for _,surf in pairs(game.surfaces) do
+		num = num+reloadLights(surf)
+	end
+	game.print("Reloaded " .. num .. " lights.")
+end
+
+function addCommands()
+	commands.add_command("reloadLights", {"cmd.reload-lights-help"}, function(event)
+		local player = game.players[event.player_index]
+		if player and player.admin then
+			game.print("Bioluminescence: Reloading all lights.")
+			reloadAllLights()
+		end
+	end)
 end
 
 --------------

@@ -6,6 +6,12 @@ require "prototypes.colorkeys"
 require "__DragonIndustries__.strings"
 require "__DragonIndustries__.mathhelper"
 
+addCommands()
+
+script.on_configuration_changed(function()
+	reloadAllLights()
+end)
+
 local function controlChunk(surface, area)
 	if not Config.glowPlants then return end
 	
@@ -119,12 +125,7 @@ local function onEntitySpawned(event)
 			end
 		end
 		--]]
-		local clr = getColor(entity.name)
-		if clr then
-			local box = entity.prototype.collision_box
-			local size = box and getBoundingBoxAverageEdgeLength(box)*1.2 or 0.5
-			rendering.draw_light{sprite="utility/light_medium", scale=size, intensity=1, color=clr, target=entity, surface=entity.surface}
-		end
+		createBiterLight(entity)
 	end
 end
 
