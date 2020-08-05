@@ -91,14 +91,7 @@ local function onEntityRemoved(event)
 	local entity = event.entity
 	if not Config.scriptLights and string.find(entity.name, "glowing-tree", 1, true) then
 		--game.print(entity.name)
-		local treelightname = literalReplace(entity.name, "glowing-tree-", "plant-light-S1.0-")
-		local pos = entity.position
-		local lights = entity.surface.find_entities_filtered{name = treelightname, area = {{pos.x-1, pos.y-3.5}, {pos.x+1, pos.y+0.5}}}
-		for _,light in pairs(lights) do
-			if string.find(light.name, "plant-light", 1, true) then
-				light.destroy()
-			end
-		end
+		removeLightsAroundEntity(entity)
 	end
 end
 

@@ -25,6 +25,12 @@ function getRandomColorForTile(tile, rand)
 	return sel, water
 end
 
+local function createLightEntity(surface, pos, scale, color, isWater)
+	local put = isWater and "glowing-water-plant-light-" .. color or "glowing-plant-light-" .. color
+	put = put .. "-S" .. scale
+	surface.create_entity{name = put, position = pos}
+end
+
 local function createBushLight(surface, entity, color)
 	if Config.scriptLight then
 		rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
@@ -148,7 +154,20 @@ function createBiterLight(entity)
 	end
 end
 
+function removeLightsAroundEntity(entity)
+	local pos = entity.position
+	local lights = entity.surface.find_entities_filtered{type = "rail-chain-signal", area = {{pos.x-1, pos.y-3.5}, {pos.x+1, pos.y+0.5}}}
+	for _,light in pairs(lights) do
+		if string.find(light.name, "plant-light", 1, true) then
+			light.destroy()
+		end
+	end
+end
+
 local function recreateEntityLight(e)
+	if not Config.scriptLights then
+		removeLightsAroundEntity(e)
+	end
 	if e.type == "tree" then
 		createTreeLightSimple(e)
 	else
@@ -223,11 +242,12 @@ local function generateColorVariations(colors)
 	return colors
 end
 
---[[
-local function createLight(name, br, size, clr, collision)
+local function createLight(name, sc, clr, collision)
+	local br = 1--2
+	local size = 5--6
 	return {
-		type = "simple-entity",
-		name = name,
+		type = "rail-chain-signal",
+		name = name .. "-S" .. sc,
 		icon_size = 32,
 		flags = {"placeable-off-grid", "not-on-map"},
 		max_health = 10,
@@ -249,13 +269,23 @@ local function createLight(name, br, size, clr, collision)
 		  {0, 0}
 		},
 		rail_piece = createEmptyAnimation(),
-		green_light = {intensity = br, size = size, color=clr},
-		orange_light = {intensity = br, size = size, color=clr},
-		red_light = {intensity = br, size = size, color=clr},
-		blue_light = {intensity = br, size = size, color=clr},
+		green_light = {intensity = br, size = size*sc, color=clr},
+		orange_light = {intensity = br, size = size*sc, color=clr},
+		red_light = {intensity = br, size = size*sc, color=clr},
+		blue_light = {intensity = br, size = size*sc, color=clr},
 	}
 end
---]]
+
+local function createLights(name, clr, collision)
+	data:extend({
+		createLight(name, 0.5, clr, collision),
+		createLight(name, 0.6, clr, collision),
+		createLight(name, 0.7, clr, collision),
+		createLight(name, 0.75, clr, collision),
+		createLight(name, 1.0, clr, collision),
+	})
+end
+
 function createGlowingPlants(color, nvars)
 	for i = 1,PLANT_VARIATIONS[color] do
 		local ename = "glowing-tree-" .. color .. "-" .. i
@@ -282,8 +312,6 @@ function createGlowingPlants(color, nvars)
 		
 		math.randomseed(render)
 		tree.colors = generateColorVariations(tree.colors)
-		local b = 1--2
-		local s = 5--6
 		
 		local r = 0.7
 		
@@ -401,9 +429,11 @@ function createGlowingPlants(color, nvars)
 			treeitem,
 			bush,
 			lily,
-			reed,
-			--createLight("glowing-plant-light-" .. color, b, s, light, {"water-tile"}),
-			--createLight("glowing-water-plant-light-" .. color, b, s, light, {}),
+			reed
 		})
+		if not Config.scriptLights then
+			createLights("glowing-plant-light-" .. color, light, {"water-tile"}),
+			createLights("glowing-water-plant-light-" .. color, light, {}),
+		end
 	end
 end
