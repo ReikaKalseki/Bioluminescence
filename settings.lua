@@ -20,4 +20,11 @@ data:extend({
             default_value = 1,
             order = "r",
         },
+        {
+            type = "bool-setting",
+            name = "script-lights",
+            setting_type = "startup",
+            default_value = true,
+            order = "r",
+        },
 })

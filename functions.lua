@@ -18,11 +18,19 @@ end
 function getRandomColorForTile(tile, rand)
 	local colors,water = getColorsForTile(tile)
 	if colors == nil or #colors == 0 then return nil end
-	return colors[rand(1, #colors)], water
+	local sel = colors[rand(1, #colors)]
+	if water then
+		
+	end
+	return sel, water
 end
 
 local function createBushLight(surface, entity, color)
-	rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	if Config.scriptLight then
+		rendering.draw_light{sprite="utility/light_medium", scale=0.6, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	else
+		createLightEntity(entity.surface, entity.position, 0.6, color)
+	end
 end
 
 local function tryPlaceBush(surface, x, y, color, rand)
@@ -39,7 +47,11 @@ local function tryPlaceBush(surface, x, y, color, rand)
 end
 
 local function createLilyLight(surface, entity, color)
-	rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	if Config.scriptLight then
+		rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	else
+		createLightEntity(entity.surface, entity.position, 0.5, color)
+	end
 end
 
 local function tryPlaceLily(surface, x, y, color, rand)
@@ -56,7 +68,11 @@ local function tryPlaceLily(surface, x, y, color, rand)
 end
 
 local function createReedLight(surface, entity, color)
-	rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	if Config.scriptLight then
+		rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	else
+		createLightEntity(entity.surface, entity.position, 0.7, color)
+	end
 end
 
 local function tryPlaceReed(surface, x, y, color, rand)
@@ -78,7 +94,11 @@ function createTreeLights(color, rand, entity, offset)
 	for d = 0.5,2.5,1 do
 		local rx = (rand(0, 10)-5)/10
 		local ry = (rand(0, 10)-5)/10
-		rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
+		if Config.scriptLight then
+			rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
+		else
+			createLightEntity(entity.surface, {entity.position.x+rx+ox, entity.poisition.y+ry+oy-d}, 1.0, color)
+		end
 	end
 	entity.tree_color_index = math.random(1, 9)
 	--entity.graphics_variation = math.random(1, game.entity_prototypes[ename].)
@@ -154,7 +174,7 @@ local function reloadLights(surface)
 	end
 	if Config.glowBiters then
 		for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"unit"}}) do
-			if createBiterLight(e) then
+			if shouldLightUnit(e) and createBiterLight(e) then
 				num = num+1
 			end
 		end
@@ -168,7 +188,7 @@ function reloadAllLights()
 	for _,surf in pairs(game.surfaces) do
 		num = num+reloadLights(surf)
 	end
-	game.print("Reloaded " .. num .. " lights.")
+	game.print("Biolum: Reloaded " .. num .. " lights.")
 end
 
 function addCommands()
@@ -281,7 +301,7 @@ function createGlowingPlants(color, nvars)
           order = bname,
           selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {"colliding-with-tiles-only", "water-tile"},
-          render_layer = "decorative",
+          render_layer = "object",
 		  localised_name = {"glowing-plants.glowing-bush", {"glowing-color-name." .. color}},
           pictures =
           {
@@ -323,7 +343,7 @@ function createGlowingPlants(color, nvars)
           order = lname,
           selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {},
-          render_layer = "decorative",
+          render_layer = "object",
 		  localised_name = {"glowing-plants.glowing-lily", {"glowing-color-name." .. color}},
           pictures =
           {
@@ -360,7 +380,7 @@ function createGlowingPlants(color, nvars)
           order = rname,
           selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {},
-          render_layer = "decorative",
+          render_layer = "object",
 		  localised_name = {"glowing-plants.glowing-reed", {"glowing-color-name." .. color}},
           pictures =
           {

@@ -14,6 +14,7 @@ function getColor(bitername)
 	local ref = getRefname(bitername)
 	if ref == nil then return nil end
 	local item = game.item_prototypes[ref]
+	if not item then error("Bitername '" .. bitername  .. "' refs to '" .. ref .. "', which returned null!") end
 	local clrstring = item.order
 	local vals = splitString(clrstring, "%-")
 	return {r = vals[1], g = vals[2], b = vals[3]}
@@ -32,9 +33,13 @@ local function createItem(data)
 	}
 end
 
+function shouldLightUnit(biter)
+	return string.find(biter.name, "biter", 1, true) or string.find(biter.name, "spitter", 1, true)
+end
+
 if data then
 	for name,biter in pairs(data.raw.unit) do
-		if string.find(name, "biter", 1, true) or string.find(name, "spitter", 1, true) then
+		if shouldLightUnit(biter) then
 			local ref = createItem(biter)
 			log("Identified biter type '" .. name .. "' to be given color key '" .. ref.name .. "' and '" .. ref.order .. "'")
 			data:extend({ref})
