@@ -25,9 +25,14 @@ function getRandomColorForTile(tile, rand)
 	return sel, water
 end
 
+local function encodeScale(scale)
+	local nm = tostring(scale)
+	return literalReplace(nm, ".", "P")
+end
+
 local function createLightEntity(surface, pos, scale, color, isWater)
 	local put = isWater and "glowing-water-plant-light-" .. color or "glowing-plant-light-" .. color
-	put = put .. "-S" .. scale
+	put = put .. "-S" .. encodeScale(scale)
 	surface.create_entity{name = put, position = pos}
 end
 
@@ -103,7 +108,7 @@ function createTreeLights(color, rand, entity, offset)
 		if Config.scriptLight then
 			rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
 		else
-			createLightEntity(entity.surface, {entity.position.x+rx+ox, entity.poisition.y+ry+oy-d}, 1.0, color)
+			createLightEntity(entity.surface, {entity.position.x+rx+ox, entity.position.y+ry+oy-d}, 1.0, color)
 		end
 	end
 	entity.tree_color_index = math.random(1, 9)
@@ -113,7 +118,7 @@ end
 function createTreeLightSimple(entity)
 	local color = splitString(entity.name, "%-")[3]
 	--game.print(entity.name .. " > " .. color)
-	createTreeLights(color, game.create_random_generator(), entity, {x = -0.5, y = 0})
+	createTreeLights(color, game.create_random_generator(), entity, {x = Config.scriptLight and -0.5 or 0, y = 0})
 end
 
 local function tryPlaceTree(surface, x, y, color, rand)
@@ -156,7 +161,7 @@ end
 
 function removeLightsAroundEntity(entity)
 	local pos = entity.position
-	local lights = entity.surface.find_entities_filtered{type = "rail-chain-signal", area = {{pos.x-1, pos.y-3.5}, {pos.x+1, pos.y+0.5}}}
+	local lights = entity.surface.find_entities_filtered{type = "lamp", area = {{pos.x-1, pos.y-3.5}, {pos.x+1, pos.y+0.5}}}
 	for _,light in pairs(lights) do
 		if string.find(light.name, "plant-light", 1, true) then
 			light.destroy()
@@ -165,9 +170,9 @@ function removeLightsAroundEntity(entity)
 end
 
 local function recreateEntityLight(e)
-	if not Config.scriptLights then
+	--if not Config.scriptLight then
 		removeLightsAroundEntity(e)
-	end
+	--end
 	if e.type == "tree" then
 		createTreeLightSimple(e)
 	else
@@ -184,6 +189,11 @@ local function recreateEntityLight(e)
 end
 
 local function reloadLights(surface)
+	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = "lamp"}) do
+		if string.find(e.name, "plant-light", 1, true) then
+			e.destroy()
+		end
+	end
 	local num = 0
 	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"tree", "simple-entity"}}) do
 		if string.find(e.name, "glowing", 1, true) then
@@ -246,33 +256,26 @@ local function createLight(name, sc, clr, collision)
 	local br = 1--2
 	local size = 5--6
 	return {
-		type = "rail-chain-signal",
-		name = name .. "-S" .. sc,
+		type = "lamp",
+		name = name .. "-S" .. encodeScale(sc),
 		icon_size = 32,
 		flags = {"placeable-off-grid", "not-on-map"},
+		energy_source = {type = "void"},
 		max_health = 10,
+		energy_usage_per_tick = "1W",
+		draw_circuit_wires = false,
 		destructible = false,
 		corpse = "small-remnants",
-		--selectable_in_game = false,
+		selectable_in_game = false,
 		collision_mask = collision,
 		animation = createEmptyAnimation(),
-		picture = createEmptyAnimation(),
-		selection_box_offsets =
-		{
-		  {0, 0},
-		  {0, 0},
-		  {0, 0},
-		  {0, 0},
-		  {0, 0},
-		  {0, 0},
-		  {0, 0},
-		  {0, 0}
-		},
-		rail_piece = createEmptyAnimation(),
-		green_light = {intensity = br, size = size*sc, color=clr},
-		orange_light = {intensity = br, size = size*sc, color=clr},
-		red_light = {intensity = br, size = size*sc, color=clr},
-		blue_light = {intensity = br, size = size*sc, color=clr},
+		picture_off = createEmptyAnimation(),
+		picture_on = createEmptyAnimation(),
+		circuit_wire_connection_point = nil,
+		circuit_wire_max_distance = 0,
+		signal_to_color_mapping = nil,
+		always_on = true,
+		light = {type = "basic", intensity = br, size = size*sc, color=clr},
 	}
 end
 
@@ -431,9 +434,10 @@ function createGlowingPlants(color, nvars)
 			lily,
 			reed
 		})
-		if not Config.scriptLights then
-			createLights("glowing-plant-light-" .. color, light, {"water-tile"}),
-			createLights("glowing-water-plant-light-" .. color, light, {}),
+		if not Config.scriptLight then
+			createLights("glowing-plant-light-" .. color, light, {"layer-13"})
+			createLights("glowing-water-plant-light-" .. color, light, {})
+			table.insert(data.raw.tile["water"].collision_mask, "layer-13")
 		end
 	end
 end

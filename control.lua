@@ -89,7 +89,7 @@ end)
 
 local function onEntityRemoved(event)	
 	local entity = event.entity
-	if not Config.scriptLights and string.find(entity.name, "glowing-tree", 1, true) then
+	if not Config.scriptLight and string.find(entity.name, "glowing-tree", 1, true) then
 		--game.print(entity.name)
 		removeLightsAroundEntity(entity)
 	end
