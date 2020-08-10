@@ -117,7 +117,7 @@ local function onEntitySpawned(event)
 			end
 		end
 		--]]
-		createBiterLight(entity)
+		--createBiterLight(entity)
 	end
 end
 
@@ -129,4 +129,4 @@ script.on_event(defines.events.on_robot_mined_entity, onEntityRemoved)
 script.on_event(defines.events.on_built_entity, onEntityAdded)
 script.on_event(defines.events.on_robot_built_entity, onEntityAdded)
 
-script.on_event(defines.events.on_entity_spawned, onEntitySpawned)
+--script.on_event(defines.events.on_entity_spawned, onEntitySpawned)

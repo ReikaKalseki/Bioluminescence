@@ -37,12 +37,16 @@ function shouldLightUnit(biter)
 	return string.find(biter.name, "biter", 1, true) or string.find(biter.name, "spitter", 1, true)
 end
 
-if data then
+if data and Config.glowBiters then
 	for name,biter in pairs(data.raw.unit) do
 		if shouldLightUnit(biter) then
+			--[[
 			local ref = createItem(biter)
 			log("Identified biter type '" .. name .. "' to be given color key '" .. ref.name .. "' and '" .. ref.order .. "'")
 			data:extend({ref})
+			--]]
+			biter.light = {type = "basic", intensity = 1.0, size = biter.run_animation.layers[3].scale*2.5, color=biter.run_animation.layers[3].tint}
+			log("Identified biter type '" .. name .. "' to be given light.")
 		end
 	end
 end

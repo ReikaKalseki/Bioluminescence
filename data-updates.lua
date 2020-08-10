@@ -7,7 +7,7 @@ local function glowAnimation(anim)
 		end
 	end
 end
-
+--[[
 if Config.glowBiters then
 	for name,biter in pairs(data.raw.unit) do
 		if string.find(name, "biter") then
@@ -16,3 +16,4 @@ if Config.glowBiters then
 		end
 	end
 end
+--]]

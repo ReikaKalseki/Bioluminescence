@@ -150,6 +150,7 @@ function placeIfCan(surface, x, y, rand, class)
 end
 
 function createBiterLight(entity)
+	--[[
 	local clr = getColor(entity.name)
 	if clr then
 		local box = entity.prototype.collision_box
@@ -157,6 +158,7 @@ function createBiterLight(entity)
 		rendering.draw_light{sprite="utility/light_medium", scale=size, intensity=1, color=clr, target=entity, surface=entity.surface}
 		return true
 	end
+	--]]
 end
 
 function removeLightsAroundEntity(entity)
