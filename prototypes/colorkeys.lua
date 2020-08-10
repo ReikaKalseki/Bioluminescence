@@ -1,3 +1,5 @@
+require "config"
+
 require "__DragonIndustries__.strings"
 
 local function parseColor(data)
@@ -45,8 +47,8 @@ if data and Config.glowBiters then
 			log("Identified biter type '" .. name .. "' to be given color key '" .. ref.name .. "' and '" .. ref.order .. "'")
 			data:extend({ref})
 			--]]
-			biter.light = {type = "basic", intensity = 1.0, size = biter.run_animation.layers[3].scale*2.5, color=biter.run_animation.layers[3].tint}
-			log("Identified biter type '" .. name .. "' to be given light.")
+			biter.light = {type = "basic", intensity = 1.0, size = 1.25+biter.run_animation.layers[3].scale*7.5, color=biter.run_animation.layers[3].tint}
+			log("Identified biter type '" .. name .. "' to be given light: " .. biter.light.size .. " x " .. serpent.block(biter.light.color))
 		end
 	end
 end
