@@ -15,16 +15,6 @@ function createSeed(surface, x, y) --Used by Minecraft MapGen
 	return bit32.band(cantorCombine(seed, cantorCombine(x, y)), 2147483647)
 end
 
-function getRandomColorForTile(tile, rand)
-	local colors,water = getColorsForTile(tile)
-	if colors == nil or #colors == 0 then return nil end
-	local sel = colors[rand(1, #colors)]
-	if water then
-		
-	end
-	return sel, water
-end
-
 local function encodeScale(scale)
 	local nm = tostring(scale)
 	return literalReplace(nm, ".", "P")
@@ -134,7 +124,7 @@ end
 
 function placeIfCan(surface, x, y, rand, class)
 	local tile = surface.get_tile(x, y)
-	local color,water = getRandomColorForTile(tile, rand) --need some way to prevent rainbow water
+	local color,water = getRandomColorForTile(tile, rand)
 	if color then
 		if class == "bush" and (not water) then
 			return tryPlaceBush(surface, x, y, color, rand)
