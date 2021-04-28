@@ -23,7 +23,7 @@ end
 local function createLightEntity(surface, pos, scale, color, isWater)
 	local put = isWater and "glowing-water-plant-light-" .. color or "glowing-plant-light-" .. color
 	put = put .. "-S" .. encodeScale(scale)
-	--surface.create_entity{name = put, position = pos}
+	surface.create_entity{name = put, position = pos}
 end
 
 local function createBushLight(surface, entity, color)
@@ -286,31 +286,6 @@ function createGlowingPlants(color, nvars)
 		local ename = "glowing-tree-" .. color .. "-" .. i
 		
 		local tree = table.deepcopy(data.raw.tree["tree-02"])
-		for _,var in pairs(tree.variations) do
-			--log(var.leaves.filename) --   8.934 Script @__Bioluminescence__/functions.lua:290: __base__/graphics/entity/tree/02/tree-02-a-leaves.png a to l
-			--var.leaves.draw_as_glow = true
-			--var.leaves.hr_version.draw_as_glow = true
-			var.leaves = {
-				layers = {
-					table.deepcopy(var.leaves),
-					table.deepcopy(var.leaves)
-				}
-			}
-			var.leaves.layers[2].filename = string.gsub(var.leaves.layers[2].filename, "__base__/graphics/entity/tree/02", "__Bioluminescence__/graphics/entity/tree")
-			var.leaves.layers[2].hr_version.filename = string.gsub(var.leaves.layers[2].hr_version.filename, "__base__/graphics/entity/tree/02", "__Bioluminescence__/graphics/entity/tree")
-			
-			--var.leaves.layers[1].draw_as_glow = true
-			--var.leaves.layers[1].hr_version.draw_as_glow = true
-			
-			var.leaves.layers[2].blend_mode = "additive"
-			var.leaves.layers[2].hr_version.blend_mode = "additive"
-			var.leaves.layers[2].flags = {"light"}
-			var.leaves.layers[2].hr_version.flags = {"light"}
-			var.leaves.layers[3] = table.deepcopy(var.leaves.layers[2])
-			var.leaves.layers[3].scale = 1.025
-			var.leaves.layers[3].hr_version.scale = 1.025
-		end
-		log(serpent.block(tree.variations[1]))
 		tree.name = ename
 		local render = RENDER_COLORS[color]
 		tree.colors = {convertColor(render, false)}
@@ -358,24 +333,21 @@ function createGlowingPlants(color, nvars)
               width = 180,
               height = 128,
 			  scale = 0.75,
-			  shift = {0.5, 0},
-			  draw_as_glow = true
+			  shift = {0.5, 0}
             },
             {
               filename = "__Bioluminescence__/graphics/entity/bush/v2/" .. color .. "-02.png",
               width = 96,
               height = 64,
 			  scale = 1,
-			  shift = {0.4, 0},
-			  draw_as_glow = true
+			  shift = {0.4, 0}
             },
             {
               filename = "__Bioluminescence__/graphics/entity/bush/v2/" .. color .. "-03.png",
               width = 96,
               height = 64,
 			  scale = 1,
-			  shift = {0.2, 0.2},
-			  draw_as_glow = true
+			  shift = {0.2, 0.2}
             }
           }
 		}
@@ -404,8 +376,7 @@ function createGlowingPlants(color, nvars)
               height = 64,
 			  scale = 1,
 			  tint = light,
-			  shift = {0.08, -0.2},
-			  draw_as_glow = true
+			  shift = {0.08, -0.2}
             },
             {
               filename = "__Bioluminescence__/graphics/entity/lily/lily-02.png",
@@ -413,8 +384,7 @@ function createGlowingPlants(color, nvars)
               height = 64,
 			  scale = 1,
 			  tint = light,
-			  shift = {0.08, -0.2},
-			  draw_as_glow = true
+			  shift = {0.08, -0.2}
             }
           }
 		}
@@ -442,8 +412,7 @@ function createGlowingPlants(color, nvars)
               width = 128,
               height = 96,
 			  scale = 1,
-			  shift = {0.35, -0.1},
-			  draw_as_glow = true
+			  shift = {0.35, -0.1}
             }
           }
 		}
@@ -458,9 +427,9 @@ function createGlowingPlants(color, nvars)
 			reed
 		})
 		if not Config.scriptLight then
-			--createLights("glowing-plant-light-" .. color, light, {"layer-27"})
-			--createLights("glowing-water-plant-light-" .. color, light, {})
-			table.insert(data.raw.tile["water"].collision_mask, "layer-27")
+			createLights("glowing-plant-light-" .. color, light, {"layer-13"})
+			createLights("glowing-water-plant-light-" .. color, light, {})
+			table.insert(data.raw.tile["water"].collision_mask, "layer-13")
 		end
 	end
 end
