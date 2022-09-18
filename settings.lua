@@ -21,15 +21,6 @@ data:extend({
             order = "r",
         },
         {
-            type = "double-setting",
-            name = "light-scale",
-            setting_type = "startup",
-            default_value = 1,
-			min_value = 0.85,
-			max_value = 20,
-            order = "r",
-        },
-        {
             type = "bool-setting",
             name = "script-lights",
             setting_type = "startup",

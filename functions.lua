@@ -26,9 +26,15 @@ local function createLightEntity(surface, pos, scale, color, isWater)
 	surface.create_entity{name = put, position = pos}
 end
 
+local function addScriptLights(surface, entity, scale, color)
+	for _,lyr in ipairs(LIGHT_LAYERS) do
+		rendering.draw_light{sprite="utility/light_medium", scale=scale*lyr.radius, intensity=1*lyr.brightness, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+	end
+end
+
 local function createBushLight(surface, entity, color)
 	if Config.scriptLight then
-		rendering.draw_light{sprite="utility/light_medium", scale=0.6*Config.lightScale, intensity=1/math.sqrt(Config.lightScale), color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+		addScriptLights(surface, entity, 0.6, color);
 	else
 		createLightEntity(entity.surface, entity.position, 0.6, color)
 	end
@@ -49,7 +55,7 @@ end
 
 local function createLilyLight(surface, entity, color)
 	if Config.scriptLight then
-		rendering.draw_light{sprite="utility/light_medium", scale=0.5*Config.lightScale, intensity=1/math.sqrt(Config.lightScale), color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+		rendering.draw_light{sprite="utility/light_medium", scale=0.5, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 	else
 		createLightEntity(entity.surface, entity.position, 0.5, color)
 	end
@@ -70,7 +76,7 @@ end
 
 local function createReedLight(surface, entity, color)
 	if Config.scriptLight then
-		rendering.draw_light{sprite="utility/light_medium", scale=0.7*Config.lightScale, intensity=1/math.sqrt(Config.lightScale), color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
+		rendering.draw_light{sprite="utility/light_medium", scale=0.7, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, surface=surface}
 	else
 		createLightEntity(entity.surface, entity.position, 0.7, color)
 	end
@@ -96,7 +102,7 @@ function createTreeLights(color, rand, entity, offset)
 		local rx = (rand(0, 10)-5)/10
 		local ry = (rand(0, 10)-5)/10
 		if Config.scriptLight then
-			rendering.draw_light{sprite="utility/light_medium", scale=1.0*Config.lightScale, intensity=1/math.sqrt(Config.lightScale), color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
+			rendering.draw_light{sprite="utility/light_medium", scale=1.0, intensity=1, color=convertColor(RENDER_COLORS[color], true), target=entity, target_offset = {rx+ox, ry+oy-d}, surface=entity.surface}				
 		else
 			createLightEntity(entity.surface, {entity.position.x+rx+ox, entity.position.y+ry+oy-d}, 1.0, color)
 		end
@@ -145,7 +151,7 @@ function createBiterLight(entity)
 	if clr then
 		local box = entity.prototype.collision_box
 		local size = box and getBoundingBoxAverageEdgeLength(box)*1.2 or 0.5
-		rendering.draw_light{sprite="utility/light_medium", scale=size*Config.lightScale, intensity=1/math.sqrt(Config.lightScale), color=clr, target=entity, surface=entity.surface}
+		rendering.draw_light{sprite="utility/light_medium", scale=size, intensity=1, color=clr, target=entity, surface=entity.surface}
 		return true
 	end
 	--]]
@@ -247,7 +253,7 @@ end
 local function createLight(name, sc, clr, collision)
 	local br = 1--2
 	local size = 5--6
-	return {
+	local ret = {
 		type = "lamp",
 		name = name .. "-S" .. encodeScale(sc),
 		icon_size = 32,
@@ -267,8 +273,12 @@ local function createLight(name, sc, clr, collision)
 		circuit_wire_max_distance = 0,
 		signal_to_color_mapping = nil,
 		always_on = true,
-		light = {type = "basic", intensity = br/math.sqrt(Config.lightScale), size = size*sc*Config.lightScale, color=clr},
+		light = {}
 	}
+	for _,lyr in ipairs(LIGHT_LAYERS) do
+		table.insert(ret.light, {type = "basic", intensity = br*lyr.brightness, size = size*sc*lyr.radius, color=clr})
+	end
+	return ret
 end
 
 local function createLights(name, clr, collision)
