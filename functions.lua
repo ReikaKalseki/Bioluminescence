@@ -303,6 +303,7 @@ function createGlowingPlants(color, nvars)
 		tree.localised_name = {"glowing-plants.glowing-tree", {"glowing-color-name." .. color}}
         tree.subgroup = "glowing-tree"
 		addMineableDropToEntity(tree, {type = "item", name = "glowing-sapling-" .. ename, amount = 1})
+		table.remove(tree.minable.results, 1)
 		local treeitem = {
 			type = "item",
 			name = "glowing-sapling-" .. ename,
@@ -437,9 +438,9 @@ function createGlowingPlants(color, nvars)
 			reed
 		})
 		if not Config.scriptLight then
-			createLights("glowing-plant-light-" .. color, light, {"layer-13"})
+			createLights("glowing-plant-light-" .. color, light, {"layer-43"})
 			createLights("glowing-water-plant-light-" .. color, light, {})
-			table.insert(data.raw.tile["water"].collision_mask, "layer-13")
+			table.insert(data.raw.tile["water"].collision_mask, "layer-43")
 		end
 	end
 end
