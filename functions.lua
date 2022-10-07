@@ -98,6 +98,7 @@ end
 function createTreeLights(color, rand, entity, offset)
 	local ox = offset and offset.x or 0
 	local oy = offset and offset.y or 0
+	if not color then error("Got null color at " .. entity.position.x .. ", " .. entity.position.y) end
 	for d = 0.5,2.5,1 do
 		local rx = (rand(0, 10)-5)/10
 		local ry = (rand(0, 10)-5)/10
@@ -223,6 +224,7 @@ function addCommands()
 		local player = game.players[event.player_index]
 		if player and player.admin then
 			game.print("Bioluminescence: Reloading all lights.")
+			log("Bioluminescence: Reloading all lights.")
 			reloadAllLights()
 		end
 	end)
