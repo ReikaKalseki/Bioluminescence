@@ -275,6 +275,7 @@ local function createLight(name, sc, clr, collision)
 		circuit_wire_max_distance = 0,
 		signal_to_color_mapping = nil,
 		always_on = true,
+		  minable = nil,
 		light = {}
 	}
 	for _,lyr in ipairs(LIGHT_LAYERS) do
@@ -330,6 +331,7 @@ function createGlowingPlants(color, nvars)
           name = bname,
           flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
           selectable_in_game = true,
+			destructible = false,
 		  minable = nil,
           icon = "__Bioluminescence__/graphics/icons/bush.png",
 		  icon_size = 32,
@@ -372,6 +374,7 @@ function createGlowingPlants(color, nvars)
           name = lname,
           flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
           selectable_in_game = true,
+			destructible = false,
 		  minable = nil,
           icon = "__Bioluminescence__/graphics/icons/lily.png",
 		  icon_size = 32,
@@ -409,6 +412,7 @@ function createGlowingPlants(color, nvars)
           name = rname,
           flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
           selectable_in_game = true,
+			destructible = false,
 		  minable = nil,
           icon = "__Bioluminescence__/graphics/icons/reeds.png",
 		  icon_size = 32,
