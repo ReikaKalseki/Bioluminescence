@@ -27,4 +27,12 @@ data:extend({
             default_value = true,
             order = "r",
         },
+        {
+            type = "int-setting",
+            name = "tree-refresh-rate",
+            setting_type = "startup",
+            default_value = 1,
+            minimum_value = 1,
+            order = "r",
+        }
 })

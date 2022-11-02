@@ -8,6 +8,8 @@ Config.density = settings.startup["plant-density"].value
 
 Config.scriptLight = settings.startup["script-lights"].value
 
+Config.treeRefreshRate = settings.startup["tree-refresh-rate"].value
+
 Config.retrogenDistance = -1
 
 Config.seedMixin = 0

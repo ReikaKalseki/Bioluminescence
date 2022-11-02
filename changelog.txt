@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.148.1
+Date: Oct 31 2022
+	- Fixed some lights and plants being destructible in some circumstances
+---------------------------------------------------------------------------------------------------
+Version: 1.144.1
+Date: Oct 7 2022
+	- Added several new layers of soft glow on trees, making forests better lit and with color gradients commonplace
+	- Fixed lights disappearing in some cases
+---------------------------------------------------------------------------------------------------
 Version: 1.105.1
 Date: Apr 28 2021
 	- 1.1 Update

@@ -8,8 +8,18 @@ require "__DragonIndustries__.mathhelper"
 
 addCommands()
 
+
+function initGlobal(markDirty)
+	if not global.biolum then
+		global.biolum = {}
+	end
+	local bb = global.biolum
+	bb.dirty = markDirty
+end
+
 script.on_configuration_changed(function()
-	reloadAllLights()
+	initGlobal(true)
+	reloadAllLights(false)
 end)
 
 local function controlChunk(surface, area)
@@ -81,6 +91,18 @@ script.on_event(defines.events.on_tick, function(event)
 			force.rechart()
 		end
 		--game.print("Ran load code")
+	end
+	
+	local biolum = global.biolum
+	if Config.treeRefreshRate > 0 then
+		for i = 1,Config.treeRefreshRate do
+			if #biolum.chunks_to_refresh > 0 then
+				local e = biolum.chunks_to_refresh[1]
+				local c = reloadLightsInArea(e.surface, {{e.chunk.x*32, e.chunk.y*32}, {e.chunk.x*32+31, e.chunk.y*32+31}})
+				--game.print("Reloaded " .. c .. " lights in chunk " .. e.chunk.x .. ", " .. e.chunk.y .. "; " .. (#biolum.chunks_to_refresh-1) .. " remaining")
+				table.remove(biolum.chunks_to_refresh, 1)
+			end
+		end
 	end
 	
 	--local pos=game.players[1].position

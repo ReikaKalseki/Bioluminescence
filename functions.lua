@@ -187,34 +187,49 @@ local function recreateEntityLight(e)
 	end
 end
 
-local function reloadLights(surface)
-	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = "lamp"}) do
+function reloadLightsInArea(surface, area)
+	local num = 0
+	for _,e in pairs(surface.find_entities_filtered{type = "lamp", area = area}) do
 		if string.find(e.name, "plant-light", 1, true) then
 			e.destroy()
 		end
 	end
-	local num = 0
-	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"tree", "simple-entity"}}) do
+	for _,e in pairs(surface.find_entities_filtered{type = {"tree", "simple-entity"}, area = area}) do
 		if string.find(e.name, "glowing", 1, true) then
 			recreateEntityLight(e)
 			num = num+1
 		end
 	end
+	return num
+end
+
+local function reloadLights(surface, instant)
+	local num = 0
 	if Config.glowBiters then
-		for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"unit"}}) do
+		for _,e in pairs(surface.find_entities_filtered{type = {"unit"}}) do
 			if shouldLightUnit(e) and createBiterLight(e) then
 				num = num+1
 			end
 		end
 	end
-	return num
+	if instant then
+		num = num+reloadLightsInArea(surface)
+		return num
+	else
+		local biolum = global.biolum
+		biolum.chunks_to_refresh = {}
+		for chunk in surface.get_chunks() do
+			table.insert(biolum.chunks_to_refresh, {surface=surface, chunk={x=chunk.x, y=chunk.y}})
+		end
+		return 0
+	end
 end
 
-function reloadAllLights()
+function reloadAllLights(instant)
 	rendering.clear("Bioluminescence")
 	local num = 0
 	for _,surf in pairs(game.surfaces) do
-		num = num+reloadLights(surf)
+		num = num+reloadLights(surf, instant)
 	end
 	game.print("Biolum: Reloaded " .. num .. " lights.")
 end
@@ -225,7 +240,7 @@ function addCommands()
 		if player and player.admin then
 			game.print("Bioluminescence: Reloading all lights.")
 			log("Bioluminescence: Reloading all lights.")
-			reloadAllLights()
+			reloadAllLights(true)
 		end
 	end)
 end
