@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.151.1
+Date: Nov 5 2022
+	- Major Code Cleanup
+	- Fixed crash with the previous lag-fix behavior
+---------------------------------------------------------------------------------------------------
+Version: 1.150.1
+Date: Nov 4 2022
+	- Spread out on-mods-changed light resync into a configurable over-time process, to reduce time spent loading a world after changing mods or settings
+---------------------------------------------------------------------------------------------------
 Version: 1.148.1
 Date: Oct 31 2022
 	- Fixed some lights and plants being destructible in some circumstances

@@ -17,7 +17,7 @@ function initGlobal(markDirty)
 	bb.dirty = markDirty
 end
 
-script.on_configuration_changed(function()
+script.on_configuration_changed(function(data)
 	initGlobal(true)
 	reloadAllLights(false)
 end)
@@ -26,7 +26,7 @@ local function controlChunk(surface, area)
 	if not Config.glowPlants then return end
 	
 	local rand = game.create_random_generator()
-	local seed = createSeed(surface, area.left_top.x, area.left_top.y)
+	local seed = createSeed(surface, area.left_top.x, area.left_top.y) --[[@as uint]]
 	rand.re_seed(seed)
 	for class,rate in pairs(PLANT_SPAWN_RATE) do
 		local f1 = rand(0, 2147483647)/2147483647
@@ -94,7 +94,7 @@ script.on_event(defines.events.on_tick, function(event)
 	end
 	
 	local biolum = global.biolum
-	if Config.treeRefreshRate > 0 then
+	if biolum and biolum.chunks_to_refresh and Config.treeRefreshRate > 0 then
 		for i = 1,Config.treeRefreshRate do
 			if #biolum.chunks_to_refresh > 0 then
 				local e = biolum.chunks_to_refresh[1]
