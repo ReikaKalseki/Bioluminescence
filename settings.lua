@@ -21,18 +21,12 @@ data:extend({
             order = "r",
         },
         {
-            type = "bool-setting",
-            name = "script-lights",
-            setting_type = "startup",
-            default_value = true,
-            order = "r",
-        },
-        {
-            type = "int-setting",
-            name = "tree-refresh-rate",
+            type = "double-setting",
+            name = "biolum-plant-glow-radius",
             setting_type = "startup",
             default_value = 1,
-            minimum_value = 1,
+            minimum_value = 0.1,
+            maximum_value = 10,
             order = "r",
-        }
+        },
 })

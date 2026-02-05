@@ -1,5 +1,3 @@
-require "config"
-
 require "__DragonIndustries__.biomecolor"
 
 CHUNK_SIZE = 32
@@ -30,8 +28,4 @@ PLANT_VARIATIONS = {
 
 for _,color in pairs(ALL_COLORS) do
 	PLANT_VARIATIONS[color] = 1
-end
-
-function initModifiers(isInit)
-
 end

@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.101.151
+Date: Nov 4 2022
+  Bugfixes:
+    - Fixed crash with the previous lag-fix behavior
+  Misc Changes:
+    - Major Code Cleanup
+---------------------------------------------------------------------------------------------------
+Version: 1.101.150
+Date: Nov 4 2022
+  Misc Changes:
+    - Spread out on-mods-changed light resync into a configurable over-time process, to reduce time spent loading a world after changing mods or settings
+---------------------------------------------------------------------------------------------------
 Version: 1.101.148
 Date: Oct 31 2022
   Bugfixes:
