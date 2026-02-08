@@ -1,12 +1,105 @@
 require "constants"
 require "functions"
-require "prototypes.colorkeys"
 
 require "__DragonIndustries__.strings"
 require "__DragonIndustries__.mathhelper"
+require "__DragonIndustries__.world"
+require "__DragonIndustries__.biomecolor"
 
+local ranTick = false
+local retrogenDistance = -1
+
+---@param surface LuaSurface
+---@param x int
+---@param y int
+---@param color string
+---@param rand LuaRandomGenerator
+---@return boolean
+local function tryPlaceBush(surface, x, y, color, rand)
+	local ename = "glowing-bush-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
+	if surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
+		local entity = surface.create_entity{name = ename, position = {x+0.125, y}, force = game.forces.neutral}
+		return entity ~= nil and entity.valid
+	end
+	return false
+end
+
+---@param surface LuaSurface
+---@param x int
+---@param y int
+---@param color string
+---@param rand LuaRandomGenerator
+---@return boolean
+local function tryPlaceLily(surface, x, y, color, rand)
+	local ename = "glowing-lily-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
+	if surface.can_place_entity{name = ename, position = {x, y}} then
+		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
+		return entity ~= nil and entity.valid
+	end
+	return false
+end
+
+---@param surface LuaSurface
+---@param x int
+---@param y int
+---@param color string
+---@param rand LuaRandomGenerator
+---@return boolean
+local function tryPlaceReed(surface, x, y, color, rand)
+	local ename = "glowing-reed-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
+	if surface.can_place_entity{name = ename, position = {x, y}} then
+		local entity = surface.create_entity{name = ename, position = {x-0.35, y}, force = game.forces.neutral}
+		return entity ~= nil and entity.valid
+	end
+	return false
+end
+
+---@param surface LuaSurface
+---@param x int
+---@param y int
+---@param color string
+---@param rand LuaRandomGenerator
+---@return boolean
+local function tryPlaceTree(surface, x, y, color, rand)
+	local ename = "glowing-tree-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
+	if surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) and surface.count_entities_filtered({type = "tree", area = {{x-6, y-6}, {x+6, y+6}}}) > 1 then
+		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
+		if entity and entity.valid then
+			entity.tree_color_index = math.random(1, 8)
+			return true
+		end
+	end
+	return false
+end
+
+---@param surface LuaSurface
+---@param x int
+---@param y int
+---@param rand LuaRandomGenerator
+---@param class string
+---@return boolean
+function placeIfCan(surface, x, y, rand, class)
+	local tile = surface.get_tile(x, y)
+	local color,water = getRandomColorForTile(tile, rand)
+	if color then
+		if class == "bush" and (not water) then
+			return tryPlaceBush(surface, x, y, color, rand)
+		elseif class == "tree" and (not water) then
+			return tryPlaceTree(surface, x, y, color, rand)
+		elseif class == "reed" then
+			return tryPlaceReed(surface, x, y, color, rand)
+		elseif class == "lily" and water then
+			return tryPlaceLily(surface, x, y, color, rand)
+		end
+	end
+	return false
+end
+
+---@param surface LuaSurface
+---@param area BoundingBox
 local function controlChunk(surface, area)
-	if not Config.glowPlants then return end
+	local fac = settings.startup["biolum-plant-density"].value
+	if fac <= 0 or not settings.startup["glow-plants"].value then return end
 	
 	local rand = game.create_random_generator()
 	local seed = createSeed(surface, area.left_top.x, area.left_top.y) --[[@as uint]]
@@ -18,7 +111,7 @@ local function controlChunk(surface, area)
 			local f2 = rand(0, 2147483647)/2147483647
 			--game.print("Genning Chunk with " .. class .. " at " .. serpent.block(area))
 			local count = rand(1, rate.perChunk)
-			count = math.max(1, math.ceil(count*Config.density))
+			count = math.max(1, math.ceil(count*fac))
 			--game.print("Chunk at " .. serpent.block(area) .. " attempting " .. count)
 			for i = 1, count do
 				local dx = rand(area.left_top.x, area.right_bottom.x)
@@ -40,22 +133,39 @@ local function controlChunk(surface, area)
 	end
 end
 
---[[
-local function onEntitySpawned(event)	
-	local entity = event.entity
-	
-	if entity.type == "unit" and settings.startup["glow-biters"].value then
-		if string.find(entity.name, "biter", 1, true) or string.find(entity.name, "spitter", 1, true) then
-			local key = literalReplace(entity.name, "-biter", "")
-			key = literalReplace(key, "-spitter", "")
-			--game.print(key)
-			local params = BITER_GLOW_PARAMS[key]
-			if params then
-				rendering.draw_light{sprite="utility/light_medium", scale=params.size, intensity=1, color=params.color, target=entity, surface=entity.surface}
+script.on_event(defines.events.on_chunk_generated, function(event)
+	controlChunk(event.surface, event.area)
+end)
+
+script.on_event(defines.events.on_tick, function(event)	
+	if not ranTick and retrogenDistance >= 0 then
+		local surface = game.surfaces["nauvis"]
+		for chunk in surface.get_chunks() do
+			local x = chunk.x
+			local y = chunk.y
+			if surface.is_chunk_generated({x, y}) then
+				local area = {
+					left_top = {
+						x = x*CHUNK_SIZE,
+						y = y*CHUNK_SIZE
+					},
+					right_bottom = {
+						x = (x+1)*CHUNK_SIZE,
+						y = (y+1)*CHUNK_SIZE
+					}
+				}
+				local dx = x*CHUNK_SIZE+CHUNK_SIZE/2
+				local dy = y*CHUNK_SIZE+CHUNK_SIZE/2
+				local dist = math.sqrt(dx*dx+dy*dy)
+				if dist >= retrogenDistance then
+					controlChunk(surface, area)
+				end
 			end
 		end
+		ranTick = true
+		for name,force in pairs(game.forces) do
+			force.rechart()
+		end
+		--game.print("Ran load code")
 	end
-end
-
-script.on_event(defines.events.on_entity_spawned, onEntitySpawned)
---]]
+end)

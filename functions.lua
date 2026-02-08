@@ -6,58 +6,44 @@ require "__DragonIndustries__.world"
 require "__DragonIndustries__.strings"
 require "__DragonIndustries__.color"
 
-local function tryPlaceBush(surface, x, y, color, rand)
-	local ename = "glowing-bush-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
-	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) then
-		local entity = surface.create_entity{name = ename, position = {x+0.125, y}, force = game.forces.neutral}
-		return entity ~= nil and entity.valid
-	end
-	return false
-end
+---@param lightcolor Color
+---@param intensity number
+---@param radiusFactor number
+---@param varScale? number
+---@param offset? Vector
+---@return data.StatelessVisualisation
+function createGlowVis(lightcolor, intensity, radiusFactor, varScale, offset)
+  -- higher intensity -> overlapping doesn't have much effect
+  -- max brightness -> maximum glow intensity
+  if not varScale then varScale = 1 end
+  local ret = {
+	nested_visualisations = {}
+  }
+  
+  for _,params in pairs(LIGHT_LAYERS) do
+	table.insert(ret.nested_visualisations, 
+	{
+		count = 1,
+		render_layer = "object",
+		--adjust_animation_speed_by_base_scale = true,
+		--scale = { 0.2, 0.6 },
 
-local function tryPlaceLily(surface, x, y, color, rand)
-	local ename = "glowing-lily-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
-	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} then
-		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
-		return entity ~= nil and entity.valid
-	end
-	return false
-end
+		offset_x = offset and offset[1] or nil,
+		offset_y = offset and offset[2] or nil,
 
-local function tryPlaceReed(surface, x, y, color, rand)
-	local ename = "glowing-reed-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
-	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} then
-		local entity = surface.create_entity{name = ename, position = {x-0.35, y}, force = game.forces.neutral}
-		return entity ~= nil and entity.valid
-	end
-	return false
-end
-
-local function tryPlaceTree(surface, x, y, color, rand)
-	local ename = "glowing-tree-" .. color .. "-" .. rand(1, PLANT_VARIATIONS[color])
-	if --[[isInChunk(dx, dy, chunk) and ]]surface.can_place_entity{name = ename, position = {x, y}} and not isWaterEdge(surface, x, y) and #surface.find_entities_filtered({type = "tree", area = {{x-4, y-4}, {x+4, y+4}}}) > 1 then
-		local entity = surface.create_entity{name = ename, position = {x, y}, force = game.forces.neutral}
-		if entity and entity.valid then
-			entity.tree_color_index = math.random(1, 9)
-			return true
-		end
-	end
-	return false
-end
-
-function placeIfCan(surface, x, y, rand, class)
-	local tile = surface.get_tile(x, y)
-	local color,water = getRandomColorForTile(tile, rand)
-	if color then
-		if class == "bush" and (not water) then
-			return tryPlaceBush(surface, x, y, color, rand)
-		elseif class == "tree" and (not water) then
-			return tryPlaceTree(surface, x, y, color, rand)
-		elseif class == "reed" then
-			return tryPlaceReed(surface, x, y, color, rand)
-		elseif class == "lily" and water then
-			return tryPlaceLily(surface, x, y, color, rand)
-		end
-	end
-	return false
+		light =
+		{
+			type = "basic",
+		intensity = 0.6, --0.7,
+		minimum_darkness = 0,
+		size = radiusFactor*params.radius*settings.startup["biolum-plant-glow-radius"].value,
+		color = {math.min(255, lightcolor.r * params.brightness * intensity), math.min(255, lightcolor.g * params.brightness * intensity), math.min(255, lightcolor.b * params.brightness * intensity)},
+		flicker_interval = 255,
+		flicker_min_modifier = 1-0.25*varScale,
+		flicker_max_modifier = 1+0.25*varScale,
+		offset_flicker = true
+		},
+	})
+  end
+	return ret
 end

@@ -6,7 +6,9 @@ require "__DragonIndustries__.arrays"
 ---@class (exact) BiolumPlant
 ---@field category string
 ---@field entity data.SimpleEntityPrototype|data.TreePrototype
----@field color Color
+---@field color string
+---@field lightcolor Color
+---@field landOnly boolean
 
 BIOLUM_PLANTS = {} ---@type {[string]: BiolumPlant}
 
@@ -20,23 +22,36 @@ local function generateColorVariations(base)
 	return colors
 end
 
+---@param lightcolor Color
+---@return data.StatelessVisualisation
+local function createTreeGlow(lightcolor)
+	return {
+		nested_visualisations = {
+			createGlowVis(lightcolor, 0.4, 1.2, 1.2, {0, -2.5}),
+			createGlowVis(lightcolor, 0.6, 1.8, 1.5),
+			createGlowVis(lightcolor, 0.25, 0.75, 1, {0, 2})
+		}
+	}
+end
+
 ---@param typename string
 ---@param color string
+---@param lightcolor Color
 ---@param i int
 ---@param r number
 ---@param landOnly boolean
 ---@param pictures data.SpriteVariations
 ---@return data.SimpleEntityPrototype
-local function createBasicPlantPrototype(typename, color, i, r, landOnly, pictures)
+local function createBasicPlantPrototype(typename, color, lightcolor, i, r, landOnly, pictures)
 	local bname = "glowing-" .. typename .. "-" .. color .. "-" .. i
-	return {
+	local ret = {
           type = "simple-entity",
           name = bname,
           icon = "__Bioluminescence__/graphics/icons/" .. typename .. ".png",
 		  icon_size = 32,
           subgroup = "glowing-" .. typename,
           order = bname,
-		  localised_name = {"glowing-plants.glowing-bush", {"glowing-color-name." .. color}},
+		  localised_name = {"glowing-plants.glowing-" .. typename, {"glowing-color-name." .. color}},
           selection_box = {{-r, -r}, {r, r}},
 		  collision_mask = {colliding_with_tiles_only=true, layers=landOnly and {water_tile=true} or {}},
           flags = {"placeable-neutral", "placeable-off-grid", "not-on-map", "not-blueprintable", "not-deconstructable"},
@@ -44,37 +59,10 @@ local function createBasicPlantPrototype(typename, color, i, r, landOnly, pictur
 			destructible = false,
           render_layer = "object",
           pictures = pictures,
-		  stateless_visualisation_variations = {
-
-		  }
+		  stateless_visualisation_variations = getArrayOfGenerated(#pictures, function() return createGlowVis(lightcolor, 1.0, 0.75) end)
 	}
-end
-
----@param lightcolor Color
-local function tree_stateless_visualisation(lightcolor)
-  -- higher intensity -> overlapping doesn't have much effect
-  -- max brightness -> maximum glow intensity
-  local max_brightness = 1-- 0.4
-  return
-  {
-    min_count = 1,
-    max_count = 2,
-
-    render_layer = "object",
-    adjust_animation_speed_by_base_scale = true,
-    scale = { 0.2, 0.6 },
-
-    light =
-    {
-      intensity = 0.4, --0.7,
-      size = 32*settings.startup["biolum-plant-glow-radius"].value,
-      color = {lightcolor.r * max_brightness, lightcolor.g * max_brightness, lightcolor.b * max_brightness},
-      flicker_interval = 90,
-      flicker_min_modifier = 0.8,
-      flicker_max_modifier = 1.2,
-      offset_flicker = true
-    },
-  }
+	BIOLUM_PLANTS[ret.name] = {category = typename, color = color, lightcolor = lightcolor, entity = ret, landOnly = landOnly}
+	return ret
 end
 
 ---@param color string
@@ -94,8 +82,11 @@ function createGlowingPlants(color)
 			minable = {
 				results = "nil",
 			},
-			stateless_visualisation_variations = getArrayOfCopies(tree_stateless_visualisation(light), #vars)
+			autoplace = "nil",
+			stateless_visualisation_variations = getArrayOfGenerated(#vars, function() return createTreeGlow(light) end)
 		})
+
+		BIOLUM_PLANTS[ename] = {category = "tree", color = color, lightcolor = light, entity = tree, landOnly = true}
 
 		addMineableDropToEntity(tree, {type = "item", name = "glowing-sapling-" .. ename, amount = 1})
 		local treeitem = {
@@ -110,7 +101,7 @@ function createGlowingPlants(color)
 			stack_size = 50
 		}
 		
-		local bush = createBasicPlantPrototype("bush", color, i, 0.7, true, {
+		local bush = createBasicPlantPrototype("bush", color, light, i, 0.7, true, {
             {
               filename = "__Bioluminescence__/graphics/entity/bush/v2/" .. color .. "-01.png",
               width = 180,
@@ -135,7 +126,7 @@ function createGlowingPlants(color)
           }
 		)
 
-		local lily = createBasicPlantPrototype("lily", color, i, 0.7, false, {
+		local lily = createBasicPlantPrototype("lily", color, light, i, 0.7, false, {
             {
               filename = "__Bioluminescence__/graphics/entity/lily/lily-01.png",
               width = 64,
@@ -155,7 +146,7 @@ function createGlowingPlants(color)
           }
 		)
 
-		local reed = createBasicPlantPrototype("reed", color, i, 0.7, false, {
+		local reed = createBasicPlantPrototype("reed", color, light, i, 0.7, false, {
             {
               filename = "__Bioluminescence__/graphics/entity/reeds/v1/" .. color .. ".png",
               width = 128,
@@ -181,7 +172,7 @@ if settings.startup["glow-plants"].value then
 	  {
 		type = "item-group",
 		name = "glowing-plants",
-		order = "g",
+		order = "biolum",
 		icon = "__Bioluminescence__/graphics/item-group.png",
 		icon_size = 64,
 	  },
@@ -189,25 +180,25 @@ if settings.startup["glow-plants"].value then
 		type = "item-subgroup",
 		name = "glowing-tree",
 		group = "glowing-plants",
-		order = "g"
+		order = "biolum-a"
 	  },
 	  {
 		type = "item-subgroup",
 		name = "glowing-bush",
 		group = "glowing-plants",
-		order = "g"
-	  },
-	  {
-		type = "item-subgroup",
-		name = "glowing-lily",
-		group = "glowing-plants",
-		order = "g"
+		order = "biolum-b"
 	  },
 	  {
 		type = "item-subgroup",
 		name = "glowing-reed",
 		group = "glowing-plants",
-		order = "g"
+		order = "biolum-c"
+	  },
+	  {
+		type = "item-subgroup",
+		name = "glowing-lily",
+		group = "glowing-plants",
+		order = "biolum-d"
 	  },
 	})
 	for color,render in pairs(RENDER_COLORS) do

@@ -15,7 +15,7 @@ data:extend({
         },
         {
             type = "double-setting",
-            name = "plant-density",
+            name = "biolum-plant-density",
             setting_type = "startup",
             default_value = 1,
             order = "r",

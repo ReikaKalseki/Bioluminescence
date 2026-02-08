@@ -2,6 +2,14 @@ require "__DragonIndustries__.biomecolor"
 
 CHUNK_SIZE = 32
 
+---@class (exact) PlantSpawnRules
+---@field chunkChance number
+---@field perChunk int
+---@field clusterChance number
+---@field clusterSize data.RangedValue
+---@field clusterRadius data.RangedValue
+
+---@type {string: PlantSpawnRules}
 PLANT_SPAWN_RATE = {
 	["bush"] = {chunkChance = 0.2, perChunk = 1, clusterChance = 0.2, clusterSize = {4, 9}, clusterRadius = {3, 6}},
 	["tree"] = {chunkChance = 0.75, perChunk = 2, clusterChance = 0.3, clusterSize = {3, 6}, clusterRadius = {5, 10}},
@@ -10,11 +18,12 @@ PLANT_SPAWN_RATE = {
 }
 
 LIGHT_LAYERS = {
-	{radius=1, brightness=1.25},
-	{radius=5, brightness=0.125},
-	{radius=16, brightness=0.05},
+	{radius=4, brightness=1.33},
+	{radius=20, brightness=0.67},
+	{radius=36, brightness=0.12},
 }
 
+---@deprecated
 BITER_GLOW_PARAMS = {
 	["small"] = {color = {r=0.9 , g=0.7, b=0.3, a=1}, size = 0.4},
 	["medium"] = {color = {r=0.93, g=0.4, b=0.4, a=1}, size = 0.7},
@@ -22,6 +31,7 @@ BITER_GLOW_PARAMS = {
 	["behemoth"] = {color = {r = 0.4, g = 0.95, b = 0.2, a = 1.000}, size = 1.6}
 }
 
+---@type {string: int}
 PLANT_VARIATIONS = {
 
 }
